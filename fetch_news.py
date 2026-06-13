@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 fetch_news.py — Global News Digest fetcher
-Fetches all 12 RSS feeds and embeds data into index.html.
+Fetches all 12 RSS feeds, translates headlines to Spanish, and embeds data into index.html.
 Run manually: python fetch_news.py
 GitHub Actions runs this automatically every morning.
 """
@@ -9,6 +9,9 @@ GitHub Actions runs this automatically every morning.
 import feedparser
 import json
 import sys
+import time
+import urllib.request
+import urllib.parse
 from datetime import datetime, timezone
 
 SOURCES = [
@@ -28,6 +31,21 @@ SOURCES = [
 
 MAX_ITEMS = 5
 USER_AGENT = "Mozilla/5.0 (compatible; GlobalNewsBot/2.0)"
+
+def translate_to_spanish(text):
+    """Translate text to Spanish using MyMemory free API (no key required)."""
+    try:
+        params = urllib.parse.urlencode({'q': text, 'langpair': 'en|es'})
+        url = f'https://api.mymemory.translated.net/get?{params}'
+        req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            data = json.loads(resp.read().decode())
+            translated = data['responseData']['translatedText']
+            if translated and not translated.upper().startswith('MYMEMORY WARNING'):
+                return translated
+    except Exception:
+        pass
+    return ""  # empty = JS will fall back to English title
 
 def fetch_feed(url):
     try:
@@ -58,12 +76,24 @@ def main():
         if result["ok"]:
             ok_count += 1
 
+    # Translate all headlines to Spanish
+    print("\nTranslating headlines to Spanish...")
+    total = sum(len(v["items"]) for v in feeds.values())
+    done = 0
+    for url, feed_data in feeds.items():
+        for item in feed_data["items"]:
+            item["title_es"] = translate_to_spanish(item["title"])
+            done += 1
+            print(f"  [{done}/{total}] {item['title'][:60]}...")
+            time.sleep(0.3)  # avoid rate limiting
+
     data = {
         "generated": datetime.now(timezone.utc).isoformat(),
         "feeds": feeds,
     }
     json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
+    # Read index.html
     try:
         with open("index.html", "r", encoding="utf-8") as f:
             html = f.read()
@@ -71,6 +101,7 @@ def main():
         print("\nERROR: index.html not found.", file=sys.stderr)
         sys.exit(1)
 
+    # Use string split — no regex, immune to < or > in JSON content
     START = '<script id="news-data" type="application/json">'
     END   = '</script>'
     start_idx = html.find(START)
