@@ -611,7 +611,7 @@ function card(src) {
   } else {
     icon = '✓';
     body = st.items.map(function(it) {
-      return '<div class="headline"><a href="' + escHtml(it.link) + '" target="_blank" rel="noopener">' + escHtml(it.title) + '</a>' +
+      return '<div class="headline"><a href="' + escHtml(it.link) + '" target="_blank" rel="noopener">' + escHtml(LANG==='es'&&it.title_es?it.title_es:it.title) + '</a>' +
         (it.pub ? '<div class="headline-time">' + timeAgo(it.pub) + '</div>' : '') + '</div>';
     }).join('');
   }
