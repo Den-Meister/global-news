@@ -12,13 +12,13 @@ import sys
 from datetime import datetime, timezone
 
 SOURCES = [
-    "https://rsshub.app/apnews/topics/world-news",
+    "https://feeds.apnews.com/rss/apf-topnews",
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://feeds.feedburner.com/euronews/en/news/",
     "https://www.france24.com/en/rss",
     "https://www.theguardian.com/world/rss",
     "https://www.aljazeera.com/xml/rss/all.xml",
-    "https://www.infobae.com/feeds/rss/",
+    "https://batimes.com.ar/feed",
     "https://en.mercopress.com/rss",
     "https://www.channelnewsasia.com/rssfeeds/8395986",
     "https://www.thehindu.com/feeder/default.rss",
