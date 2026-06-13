@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🌍 Global News Digest</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --surface2: #f5f6f8;
+      --border: #e4e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --accent: #1d4ed8;
+      --accent-light: #eff6ff;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --wire-color: #7c3aed;
+      --europe-color: #2563eb;
+      --mideast-color: #b45309;
+      --americas-color: #dc2626;
+      --asia-color: #047857;
+      --africa-color: #c2410c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      background: var(--accent);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .logo span { opacity: 0.75; font-weight: 400; font-size: 0.85em; }
+
+    .lang-pills {
+      display: flex;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .lang-pill {
+      padding: 4px 12px;
+      border-radius: 16px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+    .lang-pill.active { background: white; color: var(--accent); }
+    .lang-pill:hover:not(.active) { color: white; background: rgba(255,255,255,0.2); }
+
+    .header-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      border-radius: var(--radius-sm);
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .icon-btn.round { border-radius: 50%; width: 32px; height: 32px; padding: 0; font-size: 1rem; }
+    .icon-btn:hover { background: rgba(255,255,255,0.28); }
+
+    .stale-banner {
+      display: none;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 6px 16px;
+      border-bottom: 1px solid #fde68a;
+    }
+    .stale-banner.show { display: block; }
+
+    .status-strip {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #f59e0b;
+      flex-shrink: 0;
+    }
+    .status-dot.live { background: #10b981; }
+    .status-dot.error { background: #ef4444; }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px 32px;
+    }
+
+    .region-section { margin-bottom: 28px; }
+
+    .region-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .region-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      color: white;
+    }
+    .region-badge.wire     { background: var(--wire-color); }
+    .region-badge.europe   { background: var(--europe-color); }
+    .region-badge.mideast  { background: var(--mideast-color); }
+    .region-badge.americas { background: var(--americas-color); }
+    .region-badge.asia     { background: var(--asia-color); }
+    .region-badge.africa   { background: var(--africa-color); }
+
+    .region-count { font-size: 0.75rem; color: var(--text-muted); }
+    .region-note  { font-size: 0.74rem; color: var(--text-muted); margin: -4px 0 8px; font-style: italic; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .logo span { display: none; }
+    }
+
+    .source-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-flag { font-size: 1rem; line-height: 1; flex-shrink: 0; opacity: 0.75; }
+    .card-meta { flex: 1; min-width: 0; }
+    .card-name { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.2px; }
+    .card-country { display: none; }
+    .card-status { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; }
+
+    .card-body { padding: 10px 14px; flex: 1; }
+
+    .headline { padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .headline:last-child { border-bottom: none; }
+    .headline a {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      line-height: 1.4;
+      display: block;
+    }
+    .headline a:hover { color: var(--accent); }
+    .headline-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    .feed-msg { font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 14px 0; }
+
+    .card-foot {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .card-foot a {
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 32px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 2;
+    }
+
+    .modal-bg {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-bg.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 24px 32px;
+      width: 100%; max-width: 480px;
+    }
+    .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 18px; }
+    .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .modal-body { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+
+    .modal-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .step { display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; }
+    .step-num {
+      background: var(--accent);
+      color: white;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .modal-actions { display: flex; gap: 10px; margin-bottom: 12px; }
+    .modal-btn {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .modal-btn .bi { font-size: 1.4rem; margin-bottom: 4px; }
+    .modal-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+
+    .modal-close-btn {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    .modal-close-btn:hover { background: var(--surface2); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #1f2937;
+      color: white;
+      font-size: 0.82rem;
+      padding: 9px 18px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 300;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">🌍 Global News <span>— Daily Digest</span></div>
+    <div class="lang-pills">
+      <button class="lang-pill active" id="pill-en" onclick="setLang('en')">EN</button>
+      <button class="lang-pill" id="pill-es" onclick="setLang('es')">ES</button>
+    </div>
+    <div class="header-btns">
+      <button class="icon-btn round" onclick="window.location.reload()" title="Reload">⟳</button>
+      <button class="icon-btn" onclick="openShare()">⤴ Share</button>
+    </div>
+  </div>
+</header>
+
+<div id="stale-banner" class="stale-banner"></div>
+
+<div class="status-strip">
+  <div class="status-dot" id="sdot"></div>
+  <span id="stxt">Loading…</span>
+</div>
+
+<main id="main"></main>
+
+<footer>
+  <p>Headlines from editorially independent outlets worldwide · Geographic labels, not political lean</p>
+  <p>Updated every morning automatically · No login required · <a href="https://github.com" target="_blank" rel="noopener" style="color:inherit">Powered by GitHub</a></p>
+</footer>
+
+<!-- Share modal -->
+<div class="modal-bg" id="share-modal" onclick="if(event.target===this)closeShare()">
+  <div class="modal" role="dialog">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="share-title">🔗 Share this page</div>
+    <div class="modal-body" id="share-body">Share the link — headlines update every morning automatically.</div>
+    <div class="modal-steps">
+      <div class="step"><div class="step-num">1</div><div id="step1">Tap <strong>Copy link</strong> below</div></div>
+      <div class="step"><div class="step-num">2</div><div id="step2">Paste in <strong>WhatsApp, Email, or iMessage</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div id="step3">Anyone who opens it always sees <strong>today's news</strong></div></div>
+    </div>
+    <div class="modal-actions">
+      <div class="modal-btn" onclick="doCopyLink()"><div class="bi">🔗</div><div id="copy-lbl">Copy link</div></div>
+      <div class="modal-btn" onclick="doNativeShare()"><div class="bi">📱</div><div id="ns-lbl">Send via app</div></div>
+    </div>
+    <button class="modal-close-btn" onclick="closeShare()" id="close-lbl">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Embedded news data — replaced daily by fetch_news.py / GitHub Actions -->
+<script id="news-data" type="application/json">{"generated":"2026-06-13T16:28:25.302202+00:00","feeds":{"https://rsshub.app/apnews/topics/world-news":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://feeds.bbci.co.uk/news/world/rss.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://feeds.feedburner.com/euronews/en/news/":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.france24.com/en/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.theguardian.com/world/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.aljazeera.com/xml/rss/all.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.infobae.com/feeds/rss/":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://en.mercopress.com/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.channelnewsasia.com/rssfeeds/8395986":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.thehindu.com/feeder/default.rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.rnz.co.nz/rss/world.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"}}}</script>
+
+<script>
+// ════════════════════════════════════════════════════════
+// Global News Digest — GitHub Pages edition
+// Data is pre-fetched server-side and embedded at build time.
+// No live fetching, no CORS issues, no rate limits.
+// Runs reliably every time — data freshness is GitHub's job.
+// ════════════════════════════════════════════════════════
+
+function lsGet(key, fallback) {
+  try { return localStorage.getItem(key) || fallback; } catch(e) { return fallback; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, val); } catch(e) { }
+}
+
+const MAX = 5;
+let LANG = lsGet('news-lang', 'en');
+
+// ── Sources ──────────────────────────────────────────────
+const REGIONS = [
+  {
+    id: 'wire', cls: 'wire',
+    label: { en: 'Wire Services', es: 'Agencias' },
+    note:  { en: '', es: '' },
+    sources: [
+      { name: 'AP News',    ctry: { en: 'USA / Global', es: 'EE.UU. / Global' }, flag: '🇺🇸', home: 'https://apnews.com',             url: 'https://rsshub.app/apnews/topics/world-news' },
+      { name: 'BBC World',  ctry: { en: 'UK / Global',  es: 'R.U. / Global'  }, flag: '🇬🇧', home: 'https://www.bbc.com/news/world', url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
+    ]
+  },
+  {
+    id: 'europe', cls: 'europe',
+    label: { en: 'Europe', es: 'Europa' },
+    note:  { en: '', es: '' },
+    sources: [
+      { name: 'Euronews',     ctry: { en: 'Europe', es: 'Europa'  }, flag: '🇪🇺', home: 'https://www.euronews.com',     url: 'https://feeds.feedburner.com/euronews/en/news/' },
+      { name: 'France 24',    ctry: { en: 'France', es: 'Francia' }, flag: '🇫🇷', home: 'https://www.france24.com/en/', url: 'https://www.france24.com/en/rss' },
+      { name: 'The Guardian', ctry: { en: 'UK',     es: 'R.U.'    }, flag: '🇬🇧', home: 'https://www.theguardian.com', url: 'https://www.theguardian.com/world/rss' },
+    ]
+  },
+  {
+    id: 'mideast', cls: 'mideast',
+    label: { en: 'Middle East', es: 'Medio Oriente' },
+    note:  { en: '', es: '' },
+    sources: [
+      { name: 'Al Jazeera', ctry: { en: 'Qatar / Global', es: 'Catar / Global' }, flag: '🇶🇦', home: 'https://www.aljazeera.com', url: 'https://www.aljazeera.com/xml/rss/all.xml' },
+    ]
+  },
+  {
+    id: 'americas', cls: 'americas',
+    label: { en: 'Americas', es: 'Las Américas' },
+    note:  { en: '', es: '' },
+    sources: [
+      { name: 'Infobae',    ctry: { en: 'Argentina / Latam',       es: 'Argentina / Latam'   }, flag: '🇦🇷', home: 'https://www.infobae.com',       url: 'https://www.infobae.com/feeds/rss/' },
+      { name: 'MercoPress', ctry: { en: 'Uruguay / Southern Cone', es: 'Uruguay / Cono Sur'  }, flag: '🇺🇾', home: 'https://en.mercopress.com',       url: 'https://en.mercopress.com/rss' },
+    ]
+  },
+  {
+    id: 'asia', cls: 'asia',
+    label: { en: 'Asia-Pacific', es: 'Asia-Pacífico' },
+    note:  { en: '', es: '' },
+    sources: [
+      { name: 'CNA (Singapore)',  ctry: { en: 'Singapore / Asia',      es: 'Singapur / Asia'        }, flag: '🇸🇬', home: 'https://www.channelnewsasia.com', url: 'https://www.channelnewsasia.com/rssfeeds/8395986' },
+      { name: 'The Hindu',        ctry: { en: 'India',                 es: 'India'                  }, flag: '🇮🇳', home: 'https://www.thehindu.com',         url: 'https://www.thehindu.com/feeder/default.rss' },
+      { name: 'RNZ (New Zealand)',ctry: { en: 'New Zealand / Pacific', es: 'N. Zelanda / Pacífico'  }, flag: '🇳🇿', home: 'https://www.rnz.co.nz',            url: 'https://www.rnz.co.nz/rss/world.xml' },
+    ]
+  },
+  {
+    id: 'africa', cls: 'africa',
+    label: { en: 'Africa', es: 'África' },
+    note:  { en: 'AllAfrica aggregates 54 countries.', es: 'AllAfrica agrega 54 países.' },
+    sources: [
+      { name: 'AllAfrica', ctry: { en: 'Pan-African', es: 'Panafricano' }, flag: '🌍', home: 'https://allafrica.com', url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf' },
+    ]
+  },
+];
+
+const ALL_SOURCES = REGIONS.flatMap(r => r.sources);
+const TOTAL = ALL_SOURCES.length;
+const state = {};
+
+// ── Read embedded data ────────────────────────────────────
+function getEmbeddedData() {
+  try {
+    var el = document.getElementById('news-data');
+    if (!el) return null;
+    var d = JSON.parse(el.textContent);
+    return (d && d.generated) ? d : null;
+  } catch(e) { return null; }
+}
+
+function loadEmbeddedData() {
+  var data = getEmbeddedData();
+  if (!data) {
+    ALL_SOURCES.forEach(function(src) { state[src.url] = { st: 'nodata', items: [] }; });
+    return null;
+  }
+  ALL_SOURCES.forEach(function(src) {
+    var f = data.feeds && data.feeds[src.url];
+    if (!f || !f.ok || !f.items || !f.items.length) {
+      state[src.url] = { st: f && !f.ok ? 'err' : 'empty', items: [] };
+    } else {
+      state[src.url] = { st: 'ok', items: f.items.slice(0, MAX) };
+    }
+  });
+  return data.generated;
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function timeAgo(s) {
+  if (!s) return '';
+  var d = new Date(s);
+  if (isNaN(d)) return '';
+  var sec = (Date.now() - d) / 1000;
+  if (sec < 60)    return LANG === 'es' ? 'ahora' : 'just now';
+  if (sec < 3600)  return Math.floor(sec / 60)   + (LANG === 'es' ? ' min' : 'm');
+  if (sec < 86400) return Math.floor(sec / 3600)  + 'h';
+  return Math.floor(sec / 86400) + 'd';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── i18n ──────────────────────────────────────────────────
+var T = {
+  en: {
+    updated:  function(t) { return '✓ Updated ' + t + ' ago'; },
+    stale:    function(t) { return 'Updated ' + t + ' ago — may be outdated'; },
+    nodata:   'Waiting for first update · Check back shortly',
+    err:      '⚠ Feed unavailable',
+    empty:    'No headlines right now',
+    more:     'All stories →',
+    copylink: 'Copy link',
+    send:     'Send via app',
+    close:    'Close',
+    share:    'Share',
+    'share-body': 'Share the link — headlines update every morning automatically.',
+    step1: 'Tap <strong>Copy link</strong> below',
+    step2: 'Paste in <strong>WhatsApp, Email, or iMessage</strong>',
+    step3: 'Anyone who opens it always sees <strong>today\'s news</strong>',
+  },
+  es: {
+    updated:  function(t) { return '✓ Actualizado hace ' + t; },
+    stale:    function(t) { return 'Actualizado hace ' + t + ' — puede estar desactualizado'; },
+    nodata:   'Esperando primera actualización · Vuelve pronto',
+    err:      '⚠ Fuente no disponible',
+    empty:    'Sin titulares ahora',
+    more:     'Ver todas →',
+    copylink: 'Copiar enlace',
+    send:     'Enviar por app',
+    close:    'Cerrar',
+    share:    'Compartir',
+    'share-body': 'Comparte el enlace — los titulares se actualizan cada mañana automáticamente.',
+    step1: 'Toca <strong>Copiar enlace</strong> abajo',
+    step2: 'Pega en <strong>WhatsApp, Email o iMessage</strong>',
+    step3: 'Quien lo abra siempre ve <strong>las noticias de hoy</strong>',
+  },
+};
+
+function tr(k) {
+  var v = (T[LANG] || T.en)[k] || T.en[k] || k;
+  if (typeof v === 'function') return v.apply(null, Array.prototype.slice.call(arguments, 1));
+  return v;
+}
+
+// ── Status ────────────────────────────────────────────────
+function updateStatus(generated) {
+  var dot = document.getElementById('sdot');
+  var txt = document.getElementById('stxt');
+  var banner = document.getElementById('stale-banner');
+  if (!dot || !txt) return;
+
+  if (!generated) {
+    dot.className = 'status-dot error';
+    txt.textContent = tr('nodata');
+    return;
+  }
+
+  var ago = timeAgo(generated);
+  var hoursSince = (Date.now() - new Date(generated)) / 3600000;
+
+  if (hoursSince > 25) {
+    dot.className = 'status-dot';
+    txt.textContent = tr('stale', ago);
+    if (banner) {
+      banner.textContent = '⚠ Data is over 24 hours old. The automatic update may have been delayed.';
+      banner.classList.add('show');
+    }
+  } else {
+    dot.className = 'status-dot live';
+    txt.textContent = tr('updated', ago);
+    if (banner) banner.classList.remove('show');
+  }
+}
+
+// ── Render ────────────────────────────────────────────────
+function setLang(lang) {
+  LANG = lang;
+  lsSet('news-lang', lang);
+  document.documentElement.lang = lang;
+  var pillEn = document.getElementById('pill-en');
+  var pillEs = document.getElementById('pill-es');
+  if (pillEn) pillEn.classList.toggle('active', lang === 'en');
+  if (pillEs) pillEs.classList.toggle('active', lang === 'es');
+  var generated = loadEmbeddedData();
+  renderAll();
+  updateStatus(generated);
+  var el;
+  el = document.getElementById('share-title'); if (el) el.textContent = '🔗 ' + tr('share');
+  el = document.getElementById('share-body');  if (el) el.textContent = tr('share-body');
+  el = document.getElementById('copy-lbl');    if (el) el.textContent = tr('copylink');
+  el = document.getElementById('ns-lbl');      if (el) el.textContent = tr('send');
+  el = document.getElementById('close-lbl');   if (el) el.textContent = tr('close');
+  el = document.getElementById('step1');       if (el) el.innerHTML = tr('step1');
+  el = document.getElementById('step2');       if (el) el.innerHTML = tr('step2');
+  el = document.getElementById('step3');       if (el) el.innerHTML = tr('step3');
+}
+
+function renderAll() {
+  var mainEl = document.getElementById('main');
+  if (!mainEl) return;
+  mainEl.innerHTML = '';
+  REGIONS.forEach(function(r) {
+    var sec = document.createElement('section');
+    sec.className = 'region-section';
+    var srcWord = LANG === 'es'
+      ? 'fuente' + (r.sources.length !== 1 ? 's' : '')
+      : 'source' + (r.sources.length !== 1 ? 's' : '');
+    var noteHtml = (r.note && r.note[LANG])
+      ? '<p class="region-note">' + r.note[LANG] + '</p>' : '';
+    sec.innerHTML =
+      '<div class="region-heading">' +
+        '<span class="region-badge ' + r.cls + '">' + r.label[LANG] + '</span>' +
+        '<span class="region-count">' + r.sources.length + ' ' + srcWord + '</span>' +
+      '</div>' + noteHtml +
+      '<div class="cards-grid" id="g-' + r.id + '"></div>';
+    mainEl.appendChild(sec);
+    var grid = document.getElementById('g-' + r.id);
+    r.sources.forEach(function(src) { if (grid) grid.appendChild(card(src)); });
+  });
+}
+
+function card(src) {
+  var st = state[src.url] || { st: 'nodata', items: [] };
+  var el = document.createElement('div');
+  el.className = 'source-card';
+  el.id = 'c-' + encodeURIComponent(src.url).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+
+  var icon = '', body = '';
+  if (st.st === 'nodata') {
+    icon = '—';
+    body = '<div class="feed-msg">Waiting for update…</div>';
+  } else if (st.st === 'err') {
+    icon = '⚠️';
+    body = '<div class="feed-msg">' + tr('err') + '</div>';
+  } else if (st.st === 'empty' || !st.items.length) {
+    icon = '—';
+    body = '<div class="feed-msg">' + tr('empty') + '</div>';
+  } else {
+    icon = '✓';
+    body = st.items.map(function(it) {
+      return '<div class="headline">' +
+        '<a href="' + escHtml(it.link) + '" target="_blank" rel="noopener">' + escHtml(it.title) + '</a>' +
+        (it.pub ? '<div class="headline-time">' + timeAgo(it.pub) + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  var footHtml = (st.st === 'ok' && st.items.length)
+    ? '<div class="card-foot"><a href="' + src.home + '" target="_blank" rel="noopener">' + tr('more') + '</a></div>'
+    : '';
+
+  el.innerHTML =
+    '<div class="card-head">' +
+      '<div class="card-flag">' + src.flag + '</div>' +
+      '<div class="card-meta">' +
+        '<div class="card-name">' + escHtml(src.name) + '</div>' +
+        '<div class="card-country">' + escHtml(src.ctry[LANG]) + '</div>' +
+      '</div>' +
+      '<div class="card-status">' + icon + '</div>' +
+    '</div>' +
+    '<div class="card-body">' + body + '</div>' +
+    footHtml;
+  return el;
+}
+
+// ── Share ─────────────────────────────────────────────────
+function openShare()  { var m = document.getElementById('share-modal'); if (m) m.classList.add('open'); }
+function closeShare() { var m = document.getElementById('share-modal'); if (m) m.classList.remove('open'); }
+
+async function doCopyLink() {
+  var url = window.location.href;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast(LANG === 'es' ? '✓ Enlace copiado' : '✓ Link copied!');
+    closeShare();
+  } catch(e) {
+    showToast(url);
+  }
+}
+
+async function doNativeShare() {
+  var url = window.location.href;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '🌍 Global News Digest', url: url });
+      return;
+    } catch(e) { }
+  }
+  doCopyLink();
+}
+
+var _toastTimer;
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
+}
+
+// ── Boot ──────────────────────────────────────────────────
+(function boot() {
+  try { setLang(LANG); }
+  catch(e) {
+    var m = document.getElementById('main');
+    if (m) m.innerHTML = '<div style="padding:24px;color:#dc2626;font-family:monospace;font-size:0.85rem">Error: ' + escHtml(String(e)) + '</div>';
+  }
+}());
+</script>
+</body>
+</html>
