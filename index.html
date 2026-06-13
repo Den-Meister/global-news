@@ -354,7 +354,6 @@
   <p>Updated every morning automatically · No login required · <a href="https://github.com" target="_blank" rel="noopener" style="color:inherit">Powered by GitHub</a></p>
 </footer>
 
-<!-- Share modal -->
 <div class="modal-bg" id="share-modal" onclick="if(event.target===this)closeShare()">
   <div class="modal" role="dialog">
     <div class="modal-handle"></div>
@@ -375,17 +374,9 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Embedded news data — replaced daily by fetch_news.py / GitHub Actions -->
-<script id="news-data" type="application/json">{"generated":"2026-06-13T16:28:25.302202+00:00","feeds":{"https://rsshub.app/apnews/topics/world-news":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://feeds.bbci.co.uk/news/world/rss.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://feeds.feedburner.com/euronews/en/news/":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.france24.com/en/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.theguardian.com/world/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.aljazeera.com/xml/rss/all.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.infobae.com/feeds/rss/":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://en.mercopress.com/rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.channelnewsasia.com/rssfeeds/8395986":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.thehindu.com/feeder/default.rss":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://www.rnz.co.nz/rss/world.xml":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"},"https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf":{"ok":false,"items":[],"error":"Parse error: <urlopen error Tunnel connection failed: 403 Forbidden>"}}}</script>
+<script id="news-data" type="application/json">{}</script>
 
 <script>
-// ════════════════════════════════════════════════════════
-// Global News Digest — GitHub Pages edition
-// Data is pre-fetched server-side and embedded at build time.
-// No live fetching, no CORS issues, no rate limits.
-// Runs reliably every time — data freshness is GitHub's job.
-// ════════════════════════════════════════════════════════
-
 function lsGet(key, fallback) {
   try { return localStorage.getItem(key) || fallback; } catch(e) { return fallback; }
 }
@@ -396,7 +387,6 @@ function lsSet(key, val) {
 const MAX = 5;
 let LANG = lsGet('news-lang', 'en');
 
-// ── Sources ──────────────────────────────────────────────
 const REGIONS = [
   {
     id: 'wire', cls: 'wire',
@@ -430,8 +420,8 @@ const REGIONS = [
     label: { en: 'Americas', es: 'Las Américas' },
     note:  { en: '', es: '' },
     sources: [
-      { name: 'Infobae',    ctry: { en: 'Argentina / Latam',       es: 'Argentina / Latam'   }, flag: '🇦🇷', home: 'https://www.infobae.com',       url: 'https://www.infobae.com/feeds/rss/' },
-      { name: 'MercoPress', ctry: { en: 'Uruguay / Southern Cone', es: 'Uruguay / Cono Sur'  }, flag: '🇺🇾', home: 'https://en.mercopress.com',       url: 'https://en.mercopress.com/rss' },
+      { name: 'Infobae',    ctry: { en: 'Argentina / Latam',       es: 'Argentina / Latam'   }, flag: '🇦🇷', home: 'https://www.infobae.com',   url: 'https://www.infobae.com/feeds/rss/' },
+      { name: 'MercoPress', ctry: { en: 'Uruguay / Southern Cone', es: 'Uruguay / Cono Sur'  }, flag: '🇺🇾', home: 'https://en.mercopress.com', url: 'https://en.mercopress.com/rss' },
     ]
   },
   {
@@ -439,9 +429,9 @@ const REGIONS = [
     label: { en: 'Asia-Pacific', es: 'Asia-Pacífico' },
     note:  { en: '', es: '' },
     sources: [
-      { name: 'CNA (Singapore)',  ctry: { en: 'Singapore / Asia',      es: 'Singapur / Asia'        }, flag: '🇸🇬', home: 'https://www.channelnewsasia.com', url: 'https://www.channelnewsasia.com/rssfeeds/8395986' },
-      { name: 'The Hindu',        ctry: { en: 'India',                 es: 'India'                  }, flag: '🇮🇳', home: 'https://www.thehindu.com',         url: 'https://www.thehindu.com/feeder/default.rss' },
-      { name: 'RNZ (New Zealand)',ctry: { en: 'New Zealand / Pacific', es: 'N. Zelanda / Pacífico'  }, flag: '🇳🇿', home: 'https://www.rnz.co.nz',            url: 'https://www.rnz.co.nz/rss/world.xml' },
+      { name: 'CNA (Singapore)',   ctry: { en: 'Singapore / Asia',      es: 'Singapur / Asia'       }, flag: '🇸🇬', home: 'https://www.channelnewsasia.com', url: 'https://www.channelnewsasia.com/rssfeeds/8395986' },
+      { name: 'The Hindu',         ctry: { en: 'India',                 es: 'India'                 }, flag: '🇮🇳', home: 'https://www.thehindu.com',         url: 'https://www.thehindu.com/feeder/default.rss' },
+      { name: 'RNZ (New Zealand)', ctry: { en: 'New Zealand / Pacific', es: 'N. Zelanda / Pacífico' }, flag: '🇳🇿', home: 'https://www.rnz.co.nz',            url: 'https://www.rnz.co.nz/rss/world.xml' },
     ]
   },
   {
@@ -458,7 +448,6 @@ const ALL_SOURCES = REGIONS.flatMap(r => r.sources);
 const TOTAL = ALL_SOURCES.length;
 const state = {};
 
-// ── Read embedded data ────────────────────────────────────
 function getEmbeddedData() {
   try {
     var el = document.getElementById('news-data');
@@ -485,15 +474,14 @@ function loadEmbeddedData() {
   return data.generated;
 }
 
-// ── Utilities ─────────────────────────────────────────────
 function timeAgo(s) {
   if (!s) return '';
   var d = new Date(s);
   if (isNaN(d)) return '';
   var sec = (Date.now() - d) / 1000;
   if (sec < 60)    return LANG === 'es' ? 'ahora' : 'just now';
-  if (sec < 3600)  return Math.floor(sec / 60)   + (LANG === 'es' ? ' min' : 'm');
-  if (sec < 86400) return Math.floor(sec / 3600)  + 'h';
+  if (sec < 3600)  return Math.floor(sec / 60)  + (LANG === 'es' ? ' min' : 'm');
+  if (sec < 86400) return Math.floor(sec / 3600) + 'h';
   return Math.floor(sec / 86400) + 'd';
 }
 
@@ -501,7 +489,6 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── i18n ──────────────────────────────────────────────────
 var T = {
   en: {
     updated:  function(t) { return '✓ Updated ' + t + ' ago'; },
@@ -543,29 +530,22 @@ function tr(k) {
   return v;
 }
 
-// ── Status ────────────────────────────────────────────────
 function updateStatus(generated) {
   var dot = document.getElementById('sdot');
   var txt = document.getElementById('stxt');
   var banner = document.getElementById('stale-banner');
   if (!dot || !txt) return;
-
   if (!generated) {
     dot.className = 'status-dot error';
     txt.textContent = tr('nodata');
     return;
   }
-
   var ago = timeAgo(generated);
   var hoursSince = (Date.now() - new Date(generated)) / 3600000;
-
   if (hoursSince > 25) {
     dot.className = 'status-dot';
     txt.textContent = tr('stale', ago);
-    if (banner) {
-      banner.textContent = '⚠ Data is over 24 hours old. The automatic update may have been delayed.';
-      banner.classList.add('show');
-    }
+    if (banner) { banner.textContent = '⚠ Data is over 24 hours old. The automatic update may have been delayed.'; banner.classList.add('show'); }
   } else {
     dot.className = 'status-dot live';
     txt.textContent = tr('updated', ago);
@@ -573,7 +553,6 @@ function updateStatus(generated) {
   }
 }
 
-// ── Render ────────────────────────────────────────────────
 function setLang(lang) {
   LANG = lang;
   lsSet('news-lang', lang);
@@ -603,11 +582,8 @@ function renderAll() {
   REGIONS.forEach(function(r) {
     var sec = document.createElement('section');
     sec.className = 'region-section';
-    var srcWord = LANG === 'es'
-      ? 'fuente' + (r.sources.length !== 1 ? 's' : '')
-      : 'source' + (r.sources.length !== 1 ? 's' : '');
-    var noteHtml = (r.note && r.note[LANG])
-      ? '<p class="region-note">' + r.note[LANG] + '</p>' : '';
+    var srcWord = LANG === 'es' ? 'fuente' + (r.sources.length !== 1 ? 's' : '') : 'source' + (r.sources.length !== 1 ? 's' : '');
+    var noteHtml = (r.note && r.note[LANG]) ? '<p class="region-note">' + r.note[LANG] + '</p>' : '';
     sec.innerHTML =
       '<div class="region-heading">' +
         '<span class="region-badge ' + r.cls + '">' + r.label[LANG] + '</span>' +
@@ -625,68 +601,42 @@ function card(src) {
   var el = document.createElement('div');
   el.className = 'source-card';
   el.id = 'c-' + encodeURIComponent(src.url).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
-
   var icon = '', body = '';
   if (st.st === 'nodata') {
-    icon = '—';
-    body = '<div class="feed-msg">Waiting for update…</div>';
+    icon = '—'; body = '<div class="feed-msg">Waiting for update…</div>';
   } else if (st.st === 'err') {
-    icon = '⚠️';
-    body = '<div class="feed-msg">' + tr('err') + '</div>';
+    icon = '⚠️'; body = '<div class="feed-msg">' + tr('err') + '</div>';
   } else if (st.st === 'empty' || !st.items.length) {
-    icon = '—';
-    body = '<div class="feed-msg">' + tr('empty') + '</div>';
+    icon = '—'; body = '<div class="feed-msg">' + tr('empty') + '</div>';
   } else {
     icon = '✓';
     body = st.items.map(function(it) {
-      return '<div class="headline">' +
-        '<a href="' + escHtml(it.link) + '" target="_blank" rel="noopener">' + escHtml(it.title) + '</a>' +
-        (it.pub ? '<div class="headline-time">' + timeAgo(it.pub) + '</div>' : '') +
-        '</div>';
+      return '<div class="headline"><a href="' + escHtml(it.link) + '" target="_blank" rel="noopener">' + escHtml(it.title) + '</a>' +
+        (it.pub ? '<div class="headline-time">' + timeAgo(it.pub) + '</div>' : '') + '</div>';
     }).join('');
   }
-
   var footHtml = (st.st === 'ok' && st.items.length)
-    ? '<div class="card-foot"><a href="' + src.home + '" target="_blank" rel="noopener">' + tr('more') + '</a></div>'
-    : '';
-
+    ? '<div class="card-foot"><a href="' + src.home + '" target="_blank" rel="noopener">' + tr('more') + '</a></div>' : '';
   el.innerHTML =
-    '<div class="card-head">' +
-      '<div class="card-flag">' + src.flag + '</div>' +
-      '<div class="card-meta">' +
-        '<div class="card-name">' + escHtml(src.name) + '</div>' +
-        '<div class="card-country">' + escHtml(src.ctry[LANG]) + '</div>' +
-      '</div>' +
-      '<div class="card-status">' + icon + '</div>' +
-    '</div>' +
-    '<div class="card-body">' + body + '</div>' +
-    footHtml;
+    '<div class="card-head"><div class="card-flag">' + src.flag + '</div><div class="card-meta">' +
+    '<div class="card-name">' + escHtml(src.name) + '</div><div class="card-country">' + escHtml(src.ctry[LANG]) + '</div>' +
+    '</div><div class="card-status">' + icon + '</div></div>' +
+    '<div class="card-body">' + body + '</div>' + footHtml;
   return el;
 }
 
-// ── Share ─────────────────────────────────────────────────
 function openShare()  { var m = document.getElementById('share-modal'); if (m) m.classList.add('open'); }
 function closeShare() { var m = document.getElementById('share-modal'); if (m) m.classList.remove('open'); }
 
 async function doCopyLink() {
   var url = window.location.href;
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast(LANG === 'es' ? '✓ Enlace copiado' : '✓ Link copied!');
-    closeShare();
-  } catch(e) {
-    showToast(url);
-  }
+  try { await navigator.clipboard.writeText(url); showToast(LANG === 'es' ? '✓ Enlace copiado' : '✓ Link copied!'); closeShare(); }
+  catch(e) { showToast(url); }
 }
 
 async function doNativeShare() {
   var url = window.location.href;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: '🌍 Global News Digest', url: url });
-      return;
-    } catch(e) { }
-  }
+  if (navigator.share) { try { await navigator.share({ title: '🌍 Global News Digest', url: url }); return; } catch(e) { } }
   doCopyLink();
 }
 
@@ -700,7 +650,6 @@ function showToast(msg) {
   _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
 }
 
-// ── Boot ──────────────────────────────────────────────────
 (function boot() {
   try { setLang(LANG); }
   catch(e) {
