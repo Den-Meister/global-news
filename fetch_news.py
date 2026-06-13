@@ -12,7 +12,7 @@ import sys
 from datetime import datetime, timezone
 
 SOURCES = [
-    "https://feeds.apnews.com/rss/apf-topnews",
+    "https://feeds.npr.org/1004/rss.xml",
     "https://feeds.bbci.co.uk/news/world/rss.xml",
     "https://feeds.feedburner.com/euronews/en/news/",
     "https://www.france24.com/en/rss",
