@@ -20,14 +20,14 @@ from datetime import datetime, timezone
 SOURCES = [
     {"url": "https://feeds.npr.org/1004/rss.xml",                              "lang": "en"},
     {"url": "https://feeds.bbci.co.uk/news/world/rss.xml",                     "lang": "en"},
-    {"url": "https://www.emol.com/rss/mundo.xml",                              "lang": "es"},
+    {"url": "https://feeds.bbci.co.uk/mundo/rss.xml",                          "lang": "es"},
     {"url": "https://feeds.feedburner.com/euronews/en/news/",                  "lang": "en"},
     {"url": "https://www.france24.com/en/rss",                                 "lang": "en"},
     {"url": "https://www.theguardian.com/world/rss",                           "lang": "en"},
     {"url": "https://www.aljazeera.com/xml/rss/all.xml",                       "lang": "en"},
     {"url": "https://batimes.com.ar/feed",                                     "lang": "en"},
     {"url": "https://en.mercopress.com/rss/",                                  "lang": "en"},
-    {"url": "https://www.emol.com/rss/nacional.xml",                           "lang": "es"},
+    {"url": "https://www.elmostrador.cl/feed/",                                "lang": "es"},
     {"url": "https://www.channelnewsasia.com/rssfeeds/8395986",                "lang": "en"},
     {"url": "https://www.thehindu.com/feeder/default.rss",                     "lang": "en"},
     {"url": "https://www.rnz.co.nz/rss/world.xml",                             "lang": "en"},
@@ -156,12 +156,16 @@ def main():
         for item in feeds[url]["items"]:
             done += 1
             if is_spanish:
-                item["title_es"] = item["title"]  # already Spanish
+                item["title_es"] = item["title"]   # already Spanish
+                item["desc_es"]  = item["desc"]    # already Spanish
                 print(f"  [{done}/{total}] (es→skip) {item['title'][:55]}...")
             else:
                 item["title_es"] = translate_to_spanish(item["title"])
-                print(f"  [{done}/{total}] {item['title'][:55]}...")
                 time.sleep(0.3)
+                item["desc_es"] = translate_to_spanish(item["desc"]) if item["desc"] else ""
+                if item["desc"]:
+                    time.sleep(0.3)
+                print(f"  [{done}/{total}] {item['title'][:55]}...")
 
     # Build final data blob
     data = {
