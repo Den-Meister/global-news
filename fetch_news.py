@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 fetch_news.py — Global News Digest fetcher
-Fetches all 12 RSS feeds, grabs article summaries, translates headlines
+Fetches all RSS feeds, grabs article summaries, translates English headlines
 to Spanish, and embeds everything into index.html.
 Run manually: python fetch_news.py
 GitHub Actions runs this automatically every morning.
@@ -16,26 +16,35 @@ import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
 
+# lang="es" sources skip MyMemory translation (headlines already in Spanish)
 SOURCES = [
-    "https://feeds.npr.org/1004/rss.xml",
-    "https://feeds.bbci.co.uk/news/world/rss.xml",
-    "https://feeds.feedburner.com/euronews/en/news/",
-    "https://www.france24.com/en/rss",
-    "https://www.theguardian.com/world/rss",
-    "https://www.aljazeera.com/xml/rss/all.xml",
-    "https://batimes.com.ar/feed",
-    "https://en.mercopress.com/rss",
-    "https://www.channelnewsasia.com/rssfeeds/8395986",
-    "https://www.thehindu.com/feeder/default.rss",
-    "https://www.rnz.co.nz/rss/world.xml",
-    "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",
+    {"url": "https://feeds.npr.org/1004/rss.xml",                              "lang": "en"},
+    {"url": "https://feeds.bbci.co.uk/news/world/rss.xml",                     "lang": "en"},
+    {"url": "https://www.emol.com/rss/mundo.xml",                              "lang": "es"},
+    {"url": "https://feeds.feedburner.com/euronews/en/news/",                  "lang": "en"},
+    {"url": "https://www.france24.com/en/rss",                                 "lang": "en"},
+    {"url": "https://www.theguardian.com/world/rss",                           "lang": "en"},
+    {"url": "https://www.aljazeera.com/xml/rss/all.xml",                       "lang": "en"},
+    {"url": "https://batimes.com.ar/feed",                                     "lang": "en"},
+    {"url": "https://en.mercopress.com/rss/",                                  "lang": "en"},
+    {"url": "https://www.emol.com/rss/nacional.xml",                           "lang": "es"},
+    {"url": "https://www.channelnewsasia.com/rssfeeds/8395986",                "lang": "en"},
+    {"url": "https://www.thehindu.com/feeder/default.rss",                     "lang": "en"},
+    {"url": "https://www.rnz.co.nz/rss/world.xml",                             "lang": "en"},
+    {"url": "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf",  "lang": "en"},
 ]
 
 MAX_ITEMS  = 5
-USER_AGENT = "Mozilla/5.0 (compatible; GlobalNewsBot/2.0)"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+FEED_HEADERS = {
+    'User-Agent':      USER_AGENT,
+    'Accept':          'application/rss+xml, application/xml, text/xml, */*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+}
 
 
 def strip_html(text):
+    """Remove HTML tags and decode common entities."""
     text = re.sub(r'<[^>]+>', '', text)
     text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>') \
                .replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')
@@ -43,6 +52,11 @@ def strip_html(text):
 
 
 def get_og_description(url):
+    """
+    Fetch the article page and extract og:description or meta description.
+    Only reads the first 8 KB — enough for the <head> section.
+    Returns empty string on any failure.
+    """
     try:
         req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
         with urllib.request.urlopen(req, timeout=8) as resp:
@@ -65,6 +79,7 @@ def get_og_description(url):
 
 
 def translate_to_spanish(text):
+    """Translate text to Spanish using MyMemory free API (no key required)."""
     try:
         params = urllib.parse.urlencode({'q': text, 'langpair': 'en|es'})
         url = f'https://api.mymemory.translated.net/get?{params}'
@@ -76,12 +91,16 @@ def translate_to_spanish(text):
             return translated
     except Exception:
         pass
-    return ""
+    return ""  # JS falls back to English title
 
 
 def fetch_feed(url):
     try:
-        feed = feedparser.parse(url, agent=USER_AGENT)
+        req = urllib.request.Request(url, headers=FEED_HEADERS)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read()
+        # Pass raw bytes so feedparser handles encoding; avoids bot-detection on URL fetch
+        feed = feedparser.parse(raw)
         if feed.bozo and not feed.entries:
             raise Exception("Feed parse failed")
         items = []
@@ -104,7 +123,9 @@ def main():
     feeds = {}
     ok_count = 0
 
-    for url in SOURCES:
+    # Step 1 — fetch RSS
+    for source in SOURCES:
+        url = source["url"]
         result = fetch_feed(url)
         feeds[url] = result
         status = f"✓  ({len(result['items'])} headlines)" if result["ok"] else "✗  (failed)"
@@ -112,31 +133,44 @@ def main():
         if result["ok"]:
             ok_count += 1
 
+    # Step 2 — fill missing descriptions via og:description
     print("\nFetching article summaries (og:description)...")
-    for url, feed_data in feeds.items():
-        for item in feed_data["items"]:
+    for source in SOURCES:
+        url = source["url"]
+        for item in feeds[url]["items"]:
             if not item["desc"] and item["link"]:
                 item["desc"] = get_og_description(item["link"])
                 if item["desc"]:
                     print(f"  ✓  {item['title'][:55]}...")
                 time.sleep(0.2)
 
+    # Step 3 — translate titles to Spanish
+    # Skip MyMemory for lang="es" sources — headlines already in Spanish.
+    # Passing Spanish through EN→ES would garble them.
     print("\nTranslating headlines to Spanish...")
-    total = sum(len(v["items"]) for v in feeds.values())
+    total = sum(len(feeds[s["url"]]["items"]) for s in SOURCES)
     done  = 0
-    for url, feed_data in feeds.items():
-        for item in feed_data["items"]:
-            item["title_es"] = translate_to_spanish(item["title"])
+    for source in SOURCES:
+        url        = source["url"]
+        is_spanish = source["lang"] == "es"
+        for item in feeds[url]["items"]:
             done += 1
-            print(f"  [{done}/{total}] {item['title'][:55]}...")
-            time.sleep(0.3)
+            if is_spanish:
+                item["title_es"] = item["title"]  # already Spanish
+                print(f"  [{done}/{total}] (es→skip) {item['title'][:55]}...")
+            else:
+                item["title_es"] = translate_to_spanish(item["title"])
+                print(f"  [{done}/{total}] {item['title'][:55]}...")
+                time.sleep(0.3)
 
+    # Build final data blob
     data = {
         "generated": datetime.now(timezone.utc).isoformat(),
         "feeds": feeds,
     }
     json_str = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
+    # Read index.html
     try:
         with open("index.html", "r", encoding="utf-8") as f:
             html = f.read()
@@ -144,6 +178,7 @@ def main():
         print("\nERROR: index.html not found.", file=sys.stderr)
         sys.exit(1)
 
+    # Inject JSON using string split (immune to < or > in content)
     START = '<script id="news-data" type="application/json">'
     END   = '</script>'
     start_idx = html.find(START)
