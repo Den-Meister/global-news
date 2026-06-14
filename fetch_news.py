@@ -79,7 +79,7 @@ def get_og_description(url):
 
 
 def translate_to_spanish(text):
-    """Translate text to Spanish using MyMemory free API (no key required)."""
+    """Translate English text to Spanish using MyMemory free API."""
     try:
         params = urllib.parse.urlencode({'q': text, 'langpair': 'en|es'})
         url = f'https://api.mymemory.translated.net/get?{params}'
@@ -91,7 +91,23 @@ def translate_to_spanish(text):
             return translated
     except Exception:
         pass
-    return ""  # JS falls back to English title
+    return ""
+
+
+def translate_to_english(text):
+    """Translate Spanish text to English using MyMemory free API."""
+    try:
+        params = urllib.parse.urlencode({'q': text, 'langpair': 'es|en'})
+        url = f'https://api.mymemory.translated.net/get?{params}'
+        req = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            data = json.loads(resp.read().decode())
+        translated = data['responseData']['translatedText']
+        if translated and not translated.upper().startswith('MYMEMORY WARNING'):
+            return translated
+    except Exception:
+        pass
+    return ""
 
 
 def fetch_feed(url):
@@ -144,10 +160,10 @@ def main():
                     print(f"  ✓  {item['title'][:55]}...")
                 time.sleep(0.2)
 
-    # Step 3 — translate titles to Spanish
-    # Skip MyMemory for lang="es" sources — headlines already in Spanish.
-    # Passing Spanish through EN→ES would garble them.
-    print("\nTranslating headlines to Spanish...")
+    # Step 3 — translate
+    # - English sources: translate title+desc ES (for ES mode)
+    # - Spanish sources: save original as title_es/desc_es, translate to EN (for EN mode)
+    print("\nTranslating headlines...")
     total = sum(len(feeds[s["url"]]["items"]) for s in SOURCES)
     done  = 0
     for source in SOURCES:
@@ -156,9 +172,18 @@ def main():
         for item in feeds[url]["items"]:
             done += 1
             if is_spanish:
-                item["title_es"] = item["title"]   # already Spanish
-                item["desc_es"]  = item["desc"]    # already Spanish
-                print(f"  [{done}/{total}] (es→skip) {item['title'][:55]}...")
+                item["title_es"] = item["title"]   # original Spanish
+                item["desc_es"]  = item["desc"]    # original Spanish
+                en_title = translate_to_english(item["title"])
+                if en_title:
+                    item["title"] = en_title
+                time.sleep(0.3)
+                if item["desc"]:
+                    en_desc = translate_to_english(item["desc"])
+                    if en_desc:
+                        item["desc"] = en_desc
+                    time.sleep(0.3)
+                print(f"  [{done}/{total}] (es→en) {item['title'][:55]}...")
             else:
                 item["title_es"] = translate_to_spanish(item["title"])
                 time.sleep(0.3)
