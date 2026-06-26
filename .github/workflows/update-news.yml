@@ -5,6 +5,8 @@ on:
     # Runs at 6:00 AM UTC every day (adjust to your timezone)
     # 6 AM UTC = 1 AM EST / 11 PM PST / 8 AM CET
     - cron: '0 6 * * *'
+    - cron: '0 13 * * *'
+    - cron: '0 20 * * *'
   workflow_dispatch:
     # Allows you to trigger manually from GitHub Actions tab
 
